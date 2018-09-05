@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bistro Babuskha</title>
+    <link href="https://fonts.googleapis.com/css?family=Russo+One" rel="stylesheet">
+
+    <style>
+        body{
+            text-align: center;
+            margin: 0;
+            background: orange;
+        }
+        header {
+            height: 200px;
+            background: linear-gradient(#ff5500, orange);
+        }
+        button {
+            box-shadow: 0.5px 1px 1px;
+            width: 150px;
+            height: 30px;
+            border-radius: 5px;
+            background: #fb1f00;
+            border: none;
+
+
+        }
+        h1 {
+            font-family: cursive;
+            text-transform: capitalize;
+        }
+        h2 {
+            font-family: cursive;
+            text-transform: capitalize;
+        }
+        p {
+            font-family: cursive;
+        }
+        #eventcontainer {
+                display: grid;
+                grid-gap: 5px;
+                grid-template-columns: 1fr 1fr 1fr;
+        }
+        .ret img {
+            width: 90%;
+            box-shadow: 1px 2px 2px;
+            border-radius: 10px;
+        }
+        @media screen and (max-width:1225px) {
+            #eventcontainer {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media screen and (max-width:830px){
+            #eventcontainer {
+                grid-template-columns: 1fr;
+            }
+             button {
+                width: 100px;
+                height: 25px;
+            }
+        }
+
+        @media screen and (max-width:425px) {
+            #eventcontainer {
+                grid-template-columns: 1fr;
+
+            }
+            button {
+                width: 100px;
+                height: 25px;
+            }
+        }
+            #modal {
+                width: 100vw;
+                height: 100vh;
+                background: rgba(0, 0, 0, .8);
+                position: fixed;
+                text-align: center;
+
+                opacity: 0;
+                pointer-events: none;
+                transition: 1s;
+            }
+
+
+            #modal-content {
+                width: 80vw;
+                height: 70vh;
+                background: #fff;
+                margin: auto;
+                padding-top: 3em;
+                margin-top: 5em;
+            }
+
+
+            #modal.vis {
+            opacity: 1;
+            pointer-events: all;
+            transition: 0.5s;
+            }
+
+        #titel h1{
+            margin-top: 0;
+            padding-top: 1em;
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5em;
+        }
+        #side_navn h1 {
+            text-decoration: underline;
+            font-family: 'Russo One', sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+     <div id="modal">
+        <div id="modal-content">
+            <button>close</button>
+            <h2 id="modal-navn"></h2>
+            <img id="modal-billede" src="" alt="">
+            <p id="langBeskrivelse"></p>
+            <p id="oprindelse"></p>
+    <!--...mere… -->
+        </div>
+    </div>
+ <header>
+ <div id="titel"><h1>Bistro Babushka</h1></div>
+
+<nav>
+<button class="menu-item" data-kategori="alle">Alle</button>
+<button class="menu-item" data-kategori="forretter">Forretter</button>
+<button class="menu-item" data-kategori="hovedretter">Hovedretter</button>
+<button class="menu-item" data-kategori="desserter">Desserter</button>
+<button class="menu-item" data-kategori="drikkevarer">Drikkevarer</button>
+<button class="menu-item" data-kategori="sideorders">sideorders</button>
+</nav>
+<div id="side_navn"><h1></h1></div>
+ </header>
+
+
+
+ <main class="container">
+  <section id="eventcontainer">
+
+ </section>
+ </main>
+
+     <template id="event-template">
+    <article class="ret">
+    <h2 id="data-ret"></h2>
+    <img id="data-billede" src="" alt="">
+    <p id="data-beskrivelse"></p>
+    <p id="data-pris"></p>
+    </article>
+   </template>
+
+ <script>
+let event,
+    modtager = document.querySelector("#eventcontainer"),
+    retFilter = "alle",
+    modal = document.querySelector("#modal");
+document.addEventListener("DOMContentLoaded", getJson);
+
+async function getJson(){
+
+    //HENT Json
+    let jsonObject = await fetch("json/menu.json");
+    event = await jsonObject.json();
+    console.log(event);
+
+    visRetter();
+}
+//EVENTLISTENERES PÅ ALLE KNAPPER
+document.querySelectorAll(".menu-item").forEach( knap =>{
+    knap.addEventListener("click", filtrering)
+});
+function filtrering(){
+    modtager.textContent = "";
+    retFilter=this.getAttribute("data-kategori");
+    visRetter();
+    console.log("filter");
+}
+
+function visRetter() {
+    let myTemplate = document.querySelector("#event-template");
+    document.querySelector("#side_navn h1").textContent = retFilter;
+    event.forEach( ret => {
+    if(ret.kategori==retFilter || retFilter=="alle"){
+        console.log(myTemplate);
+
+        let klon = myTemplate.cloneNode(true).content;
+        klon.querySelector("#data-ret").textContent = ret.navn;
+        klon.querySelector("#data-billede").src = "imgs/small/" + ret.billede + "-sm.jpg";
+        klon.querySelector("#data-billede").addEventListener("click",() => {
+
+            visModal(ret);
+        });
+        klon.querySelector("#data-beskrivelse").textContent = ret.kortbeskrivelse;
+        klon.querySelector("#data-pris").textContent = ret.pris + "kr DKK";
+        modtager.appendChild(klon);
+
+    }
+
+    });
+}
+       //Funktioner til at vise og fjerne modal vinduet
+       function visModal(ret) {
+           console.log(ret);
+           modal.classList.add("vis");
+           modal.querySelector("#modal-navn").textContent = ret.navn;
+           modal.querySelector("#modal-billede").src = "imgs/small/" + ret.billede + "-sm.jpg";
+           modal.querySelector("#modal-billede").alt = "Foto af " + ret.navn;
+           modal.querySelector("#langBeskrivelse").textContent = ret.langbeskrivelse;
+           modal.querySelector("#oprindelse").textContent = ret.oprindelsesregion;
+           modal.querySelector("button").addEventListener("click", skjulModal);
+       }
+       function skjulModal() {
+
+           modal.classList.remove("vis");
+           //window.scrollTo(0);
+       }
+
+</script>
+</body>
+</html>
